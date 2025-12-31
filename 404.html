@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Lost in Space</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-blue: #9b9b9b;
+            --dark-bg: #1a1a1a;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --card-gradient: linear-gradient(135deg, #313131 0%, #1a1a1a 100%);
+            --transition-smooth: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: var(--dark-bg);
+            background-image: radial-gradient(circle at center, #252525 0%, #1a1a1a 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        /* --- رائد الفضاء الكرتوني (CSS ONLY) --- */
+        .astronaut-box {
+            position: relative;
+            margin-bottom: 40px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+        }
+
+        .ghost-astronaut {
+            width: 140px;
+            height: 160px;
+            background: white;
+            border-radius: 70px 70px 10px 10px;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* خوذة رائد الفضاء */
+        .helmet {
+            width: 90px;
+            height: 70px;
+            background: #333;
+            border-radius: 20px;
+            position: absolute;
+            top: 30px;
+            left: 25px;
+            overflow: hidden;
+            border: 4px solid var(--primary-blue);
+        }
+
+        /* لمعة الخوذة */
+        .helmet::after {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 30px;
+            height: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+        }
+
+        /* ذيول الشبح من الأسفل */
+        .bottom-waves {
+            display: flex;
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+        }
+
+        .bottom-waves div {
+            flex: 1;
+            height: 30px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        /* --- نصوص الصفحة --- */
+        .content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.05);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 6rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            line-height: 1;
+            margin-bottom: 10px;
+            letter-spacing: -5px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 400;
+            color: #ccc;
+        }
+
+        p {
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* --- أزرار العودة --- */
+        .btn-home {
+            background: white;
+            color: var(--dark-bg);
+            padding: 12px 35px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-home:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- خلفية النجوم --- */
+        .stars-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.2;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars-container">
+        <div class="star" style="top: 10%; left: 15%; width: 3px; height: 3px;"></div>
+        <div class="star" style="top: 40%; left: 80%; width: 2px; height: 2px;"></div>
+        <div class="star" style="top: 70%; left: 20%; width: 4px; height: 4px;"></div>
+        <div class="star" style="top: 85%; left: 90%; width: 2px; height: 2px;"></div>
+        <div class="star" style="top: 20%; left: 60%; width: 3px; height: 3px;"></div>
+    </div>
+
+    <div class="container">
+        <div class="astronaut-box">
+            <div class="ghost-astronaut">
+                <div class="helmet"></div>
+                <div class="bottom-waves">
+                    <div></div><div></div><div></div><div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h1>404</h1>
+            <h2>Houston, we have a problem.</h2>
+            <p>The page you're looking for has drifted out of orbit. Our ghost astronaut is trying to find it, but for now, let's get you back home.</p>
+            
+            <a href="index.html" class="btn-home">
+                <i class="fas fa-rocket"></i> Back to Safety
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
