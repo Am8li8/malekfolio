@@ -124,4 +124,183 @@ document.addEventListener('DOMContentLoaded', () => {
     // التشغيل الأولي
     updateDisplay();
     setTimeout(moveUnderline, 200);
+
+
+    const ring = document.createElement('div');
+    ring.className = 'cursor-ring';
+    document.body.appendChild(ring);
+
+    let mX = 0, mY = 0; // موقع الماوس
+    let cX = 0, cY = 0; // موقع الدائرة
+
+    window.addEventListener('mousemove', e => {
+        mX = e.clientX;
+        mY = e.clientY;
+    });
+
+    // حلقة الأنيميشن: أداء 120 إطار في الثانية
+    function render() {
+        // تنعيم الحركة (كلما قل الرقم 0.1 زادت "السيولة")
+        cX += (mX - cX) * 0.3;
+        cY += (mY - cY) * 0.3;
+
+        ring.style.transform = `translate(${cX - 20}px, ${cY - 20}px)`;
+        
+        requestAnimationFrame(render);
+    }
+    render();
+
+    // التفاعل مع العناصر
+    const targets = document.querySelectorAll('a, button, .project-card, .icons a');
+    targets.forEach(t => {
+        t.addEventListener('mouseenter', () => ring.classList.add('cursor-active'));
+        t.addEventListener('mouseleave', () => ring.classList.remove('cursor-active'));
+    });
+
+
+
+    const modalHTML = `
+        <div id="project-modal" class="modal-wrapper">
+            <div class="modal-bg"></div>
+            <div class="modal-box">
+                <button class="close-btn">&times;</button>
+                <div class="modal-img-holder"><img id="modal-img" src="" alt=""></div>
+                <div class="modal-txt-holder">
+                    <div class="modal-head">
+                        <h2 id="modal-title" style="font-size:1.5em"></h2>
+                        <span id="modal-year"></span>
+                    </div>
+                    <span id="modal-cat" style="color:#4f6cf5; font-size:0.9em"></span>
+                    <p id="modal-desc"></p>
+                    <a id="modal-link" href="#" target="_blank" class="view-btn" style="width:100%; text-align:center">Visit Project</a>
+                </div>
+            </div>
+        </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    const modal = document.getElementById('project-modal');
+    const closeBtn = modal.querySelector('.close-btn');
+
+    // 2. إضافة زر الرابط الخارجي بجانب زر Details في كل كارت تلقائياً
+    document.querySelectorAll('.project-card').forEach(card => {
+        const infoDiv = card.querySelector('.project-info');
+        const viewBtn = card.querySelector('.open-modal');
+        const linkHref = card.querySelector('.project-link').href;
+
+        // وضع الأزرار في حاوية واحدة
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'card-btns';
+        
+        const linkBtn = document.createElement('a');
+        linkBtn.href = linkHref;
+        linkBtn.target = '_blank';
+        linkBtn.className = 'icon-link';
+        linkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
+
+        viewBtn.parentNode.insertBefore(btnContainer, viewBtn);
+        btnContainer.appendChild(viewBtn);
+        btnContainer.appendChild(linkBtn);
+    });
+
+    // 3. منطق فتح المودال
+    document.querySelectorAll('.open-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const card = this.closest('.project-card');
+            const hidden = card.querySelector('.hidden-info');
+
+            document.getElementById('modal-title').innerText = card.querySelector('h3').innerText;
+            document.getElementById('modal-cat').innerText = card.querySelector('.category').innerText;
+            document.getElementById('modal-img').src = card.querySelector('img').src;
+            document.getElementById('modal-desc').innerText = hidden.querySelector('.full-desc').innerText;
+            document.getElementById('modal-year').innerText = hidden.querySelector('.project-year').innerText;
+            document.getElementById('modal-link').href = hidden.querySelector('.project-link').href;
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // 4. وظائف الإغلاق (X, Overlay, Esc)
+    const hideModal = () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
+
+    closeBtn.onclick = hideModal;
+    modal.querySelector('.modal-bg').onclick = hideModal;
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape" && modal.style.display === 'flex') hideModal();
+    });
+
+
+
+    const API_KEY = "AIzaSyBwNEmtUPAMEgzGfLS3a4Z_9hgMJLMcREU"; 
+
+const chatToggle = document.getElementById('ai-chat-toggle');
+const chatWindow = document.getElementById('ai-chat-window');
+const closeChat = document.getElementById('close-chat');
+const sendBtn = document.getElementById('send-msg');
+const userInput = document.getElementById('user-msg');
+const chatBody = document.getElementById('ai-chat-body');
+
+// فتح وإغلاق النافذة
+chatToggle.onclick = () => chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+closeChat.onclick = () => chatWindow.style.display = 'none';
+
+// تعريف شخصية الذكاء الاصطناعي (معلوماتك)
+const SYSTEM_PROMPT = `
+You are Malek's personal AI Assistant. Here is your knowledge base:
+- Professional Role: Developer (1+ year exp) and Designer (3+ years exp).
+- Projects: Completed over 30 professional projects.
+- Portfolio: On Behance (link in footer/projects).
+- CV: Located at "img/cv.pdf".
+- Social Media: Username on GitHub is "Am8li8". Also on Telegram and LinkedIn.
+- Contact: WhatsApp +201031660042.
+- Tone: Professional, friendly, and helpful. 
+If someone asks for a CV, give them the path. If they ask for contact, provide the WhatsApp or social links. Always promote Malek's skills.
+`;
+
+async function getGeminiResponse(message) {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: SYSTEM_PROMPT + "\nUser: " + message }] }]
+        })
+    });
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text;
+}
+
+async function handleMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    // إضافة رسالة المستخدم
+    appendMessage(text, 'user');
+    userInput.value = '';
+
+    // رسالة "جاري التفكير"
+    const loadingMsg = appendMessage("Typing...", 'ai');
+
+    try {
+        const aiResponse = await getGeminiResponse(text);
+        loadingMsg.innerText = aiResponse;
+    } catch (error) {
+        loadingMsg.innerText = "Sorry, I'm having trouble connecting. Check your API key.";
+    }
+}
+
+function appendMessage(text, side) {
+    const div = document.createElement('div');
+    div.className = `msg ${side}`;
+    div.innerText = text;
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return div;
+}
+
+sendBtn.onclick = handleMessage;
+userInput.onkeypress = (e) => { if(e.key === 'Enter') handleMessage(); };
 });
