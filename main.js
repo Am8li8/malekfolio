@@ -6,16 +6,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const underline = document.querySelector('.nav-underline'); 
     const navLinks = document.querySelectorAll('nav ul li a');
 
-    // --- 2. نظام المشاريع (عكس الترتيب + الفلترة + تحميل المزيد) ---
+    // --- 2. نظام المشاريع ---
     let projectCards = Array.from(grid.querySelectorAll('.project-card')).reverse();
     const cardsPerPage = 6;
     let currentIndex = cardsPerPage;
     let activeFilter = 'all';
 
-    // إعادة بناء الشبكة بالترتيب المعكوس
+    // إعادة بناء الشبكة بالترتيب المعكوس مرة واحدة عند البداية
     if(grid) {
         grid.innerHTML = '';
-        projectCards.forEach(card => grid.appendChild(card));
+        projectCards.forEach(card => {
+            grid.appendChild(card);
+            // إضافة زر الرابط الخارجي لكل كارت فوراً عند البناء
+            setupCardButtons(card);
+        });
+    }
+
+    function setupCardButtons(card) {
+        if (card.querySelector('.card-btns')) return; // منع التكرار
+        const viewBtn = card.querySelector('.open-modal');
+        const linkHref = card.querySelector('.project-link').href;
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'card-btns';
+        const linkBtn = document.createElement('a');
+        linkBtn.href = linkHref;
+        linkBtn.target = '_blank';
+        linkBtn.className = 'icon-link';
+        linkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
+        viewBtn.parentNode.insertBefore(btnContainer, viewBtn);
+        btnContainer.appendChild(viewBtn);
+        btnContainer.appendChild(linkBtn);
     }
 
     function updateDisplay() {
@@ -34,8 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 card.style.opacity = '1';
                 card.style.transform = 'translateY(0)';
-                card.style.transition = '0.4s ease';
-            }, 10 * index);
+            }, 50 * index);
         });
 
         if (loadMoreBtn) {
@@ -60,105 +79,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 3. وظيفة تحريك خط الهيدر السلس (Underline) ---
+    // --- 3. وظيفة تحريك خط الهيدر ---
     function moveUnderline() {
         const activeLink = document.querySelector('nav a.active');
         const navUl = document.querySelector('nav ul');
-
         if (activeLink && underline && navUl) {
             const linkRect = activeLink.getBoundingClientRect();
             const navRect = navUl.getBoundingClientRect();
-            
-            const width = linkRect.width - 30;
-            const leftPosition = linkRect.left - navRect.left + 15;
-
-            underline.style.width = `${width}px`;
-            underline.style.transform = `translateX(${leftPosition}px)`;
+            underline.style.width = `${linkRect.width - 30}px`;
+            underline.style.transform = `translateX(${linkRect.left - navRect.left + 15}px)`;
             underline.style.opacity = "1";
         }
     }
 
-    // --- 4. نظام مراقبة السكاشن وتحريك المهارات (المصحح) ---
+    // --- 4. نظام مراقبة السكاشن ---
     const sections = document.querySelectorAll('section, #home');
-    const observerOptions = {
-        root: null,
-        rootMargin: '-20% 0px -55% 0px',
-        threshold: 0
-    };
-
-    // متغير لمنع تكرار أنميشن المهارات واختفائه
+    const observerOptions = { root: null, rootMargin: '-20% 0px -55% 0px', threshold: 0 };
     let skillsAnimated = false;
 
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const id = entry.target.getAttribute('id');
-                
-                // تحديث الروابط النشطة
                 navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === `#${id}`) {
-                        link.classList.add('active');
-                        requestAnimationFrame(moveUnderline);
-                    }
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
                 });
+                moveUnderline();
 
-                // --- تحريك المهارات مرة واحدة فقط ---
                 if (id === 'skills' && !skillsAnimated) {
-                    const bars = document.querySelectorAll('.progress-line span');
-                    bars.forEach(bar => {
-                        const targetWidth = bar.getAttribute('data-skill'); 
-                        // تم حذف السطر اللي بيصفر العرض عشان ما يختفيش ويرجع
-                        bar.style.width = targetWidth + '%';
+                    document.querySelectorAll('.progress-line span').forEach(bar => {
+                        bar.style.width = bar.getAttribute('data-skill') + '%';
                     });
-                    skillsAnimated = true; // تم التنفيذ بنجاح
+                    skillsAnimated = true;
                 }
             }
         });
     }, observerOptions);
 
     sections.forEach(section => observer.observe(section));
-
     window.addEventListener('resize', moveUnderline);
 
-    // التشغيل الأولي
-    updateDisplay();
-    setTimeout(moveUnderline, 200);
-
-
-    const ring = document.createElement('div');
-    ring.className = 'cursor-ring';
-    document.body.appendChild(ring);
-
-    let mX = 0, mY = 0; // موقع الماوس
-    let cX = 0, cY = 0; // موقع الدائرة
-
-    window.addEventListener('mousemove', e => {
-        mX = e.clientX;
-        mY = e.clientY;
-    });
-
-    // حلقة الأنيميشن: أداء 120 إطار في الثانية
-    function render() {
-        // تنعيم الحركة (كلما قل الرقم 0.1 زادت "السيولة")
-        cX += (mX - cX) * 0.3;
-        cY += (mY - cY) * 0.3;
-
-        ring.style.transform = `translate(${cX - 20}px, ${cY - 20}px)`;
-        
-        requestAnimationFrame(render);
-    }
-    render();
-
-    // التفاعل مع العناصر
-    const targets = document.querySelectorAll('a, button, .project-card, .icons a');
-    targets.forEach(t => {
-        t.addEventListener('mouseenter', () => ring.classList.add('cursor-active'));
-        t.addEventListener('mouseleave', () => ring.classList.remove('cursor-active'));
-    });
-
-
-
+    // --- 5. المودال ---
     const modalHTML = `
         <div id="project-modal" class="modal-wrapper">
             <div class="modal-bg"></div>
@@ -181,126 +142,91 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('project-modal');
     const closeBtn = modal.querySelector('.close-btn');
 
-    // 2. إضافة زر الرابط الخارجي بجانب زر Details في كل كارت تلقائياً
-    document.querySelectorAll('.project-card').forEach(card => {
-        const infoDiv = card.querySelector('.project-info');
-        const viewBtn = card.querySelector('.open-modal');
-        const linkHref = card.querySelector('.project-link').href;
-
-        // وضع الأزرار في حاوية واحدة
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'card-btns';
-        
-        const linkBtn = document.createElement('a');
-        linkBtn.href = linkHref;
-        linkBtn.target = '_blank';
-        linkBtn.className = 'icon-link';
-        linkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
-
-        viewBtn.parentNode.insertBefore(btnContainer, viewBtn);
-        btnContainer.appendChild(viewBtn);
-        btnContainer.appendChild(linkBtn);
-    });
-
-    // 3. منطق فتح المودال
-    document.querySelectorAll('.open-modal').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const card = this.closest('.project-card');
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('open-modal') || e.target.parentElement.classList.contains('open-modal')) {
+            const btn = e.target.closest('.open-modal');
+            const card = btn.closest('.project-card');
             const hidden = card.querySelector('.hidden-info');
-
             document.getElementById('modal-title').innerText = card.querySelector('h3').innerText;
             document.getElementById('modal-cat').innerText = card.querySelector('.category').innerText;
             document.getElementById('modal-img').src = card.querySelector('img').src;
             document.getElementById('modal-desc').innerText = hidden.querySelector('.full-desc').innerText;
             document.getElementById('modal-year').innerText = hidden.querySelector('.project-year').innerText;
             document.getElementById('modal-link').href = hidden.querySelector('.project-link').href;
-
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
-        });
+        }
     });
 
-    // 4. وظائف الإغلاق (X, Overlay, Esc)
-    const hideModal = () => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    };
-
+    const hideModal = () => { modal.style.display = 'none'; document.body.style.overflow = 'auto'; };
     closeBtn.onclick = hideModal;
     modal.querySelector('.modal-bg').onclick = hideModal;
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === "Escape" && modal.style.display === 'flex') hideModal();
-    });
-
-
-
+    // --- 6. AI Chat (Gemini) المصحح ---
     const API_KEY = "AIzaSyBwNEmtUPAMEgzGfLS3a4Z_9hgMJLMcREU"; 
+    const SYSTEM_PROMPT = `You are Malek's personal AI Assistant. 
+    Bio: Developer (1+ year), Designer (3+ years), 30+ projects.
+    Links: GitHub "Am8li8", WhatsApp +201031660042, CV at "img/cv.pdf".
+    Answer briefly and professionally.`;
 
-const chatToggle = document.getElementById('ai-chat-toggle');
-const chatWindow = document.getElementById('ai-chat-window');
-const closeChat = document.getElementById('close-chat');
-const sendBtn = document.getElementById('send-msg');
-const userInput = document.getElementById('user-msg');
-const chatBody = document.getElementById('ai-chat-body');
+    async function getGeminiResponse(message) {
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: SYSTEM_PROMPT + "\nUser: " + message }] }]
+                })
+            });
+            const data = await response.json();
+            if (data.candidates && data.candidates[0].content) {
+                return data.candidates[0].content.parts[0].text;
+            }
+            throw new Error("Invalid response");
+        } catch (error) {
+            console.error("AI Error:", error);
+            return "I'm having trouble connecting. Please contact Malek directly on WhatsApp.";
+        }
+    }
 
-// فتح وإغلاق النافذة
-chatToggle.onclick = () => chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
-closeChat.onclick = () => chatWindow.style.display = 'none';
-
-// تعريف شخصية الذكاء الاصطناعي (معلوماتك)
-const SYSTEM_PROMPT = `
-You are Malek's personal AI Assistant. Here is your knowledge base:
-- Professional Role: Developer (1+ year exp) and Designer (3+ years exp).
-- Projects: Completed over 30 professional projects.
-- Portfolio: On Behance (link in footer/projects).
-- CV: Located at "img/cv.pdf".
-- Social Media: Username on GitHub is "Am8li8". Also on Telegram and LinkedIn.
-- Contact: WhatsApp +201031660042.
-- Tone: Professional, friendly, and helpful. 
-If someone asks for a CV, give them the path. If they ask for contact, provide the WhatsApp or social links. Always promote Malek's skills.
-`;
-
-async function getGeminiResponse(message) {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{ parts: [{ text: SYSTEM_PROMPT + "\nUser: " + message }] }]
-        })
-    });
-    const data = await response.json();
-    return data.candidates[0].content.parts[0].text;
-}
-
-async function handleMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    // إضافة رسالة المستخدم
-    appendMessage(text, 'user');
-    userInput.value = '';
-
-    // رسالة "جاري التفكير"
-    const loadingMsg = appendMessage("Typing...", 'ai');
-
-    try {
+    window.handleMessage = async () => {
+        const userInput = document.getElementById('user-msg');
+        const text = userInput.value.trim();
+        if (!text) return;
+        appendMessage(text, 'user');
+        userInput.value = '';
+        const loadingMsg = appendMessage("Thinking...", 'ai');
         const aiResponse = await getGeminiResponse(text);
         loadingMsg.innerText = aiResponse;
-    } catch (error) {
-        loadingMsg.innerText = "Sorry, I'm having trouble connecting. Check your API key.";
+    };
+
+    function appendMessage(text, side) {
+        const div = document.createElement('div');
+        div.className = `msg ${side}`;
+        div.innerText = text;
+        const chatBody = document.getElementById('ai-chat-body');
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        return div;
     }
-}
 
-function appendMessage(text, side) {
-    const div = document.createElement('div');
-    div.className = `msg ${side}`;
-    div.innerText = text;
-    chatBody.appendChild(div);
-    chatBody.scrollTop = chatBody.scrollHeight;
-    return div;
-}
+    document.getElementById('send-msg').onclick = window.handleMessage;
+    document.getElementById('user-msg').onkeypress = (e) => { if(e.key === 'Enter') window.handleMessage(); };
 
-sendBtn.onclick = handleMessage;
-userInput.onkeypress = (e) => { if(e.key === 'Enter') handleMessage(); };
+    // --- 7. Cursor Ring ---
+    const ring = document.createElement('div');
+    ring.className = 'cursor-ring';
+    document.body.appendChild(ring);
+    let mX = 0, mY = 0, cX = 0, cY = 0;
+    window.addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
+    function renderCursor() {
+        cX += (mX - cX) * 0.2; cY += (mY - cY) * 0.2;
+        ring.style.transform = `translate(${cX - 20}px, ${cY - 20}px)`;
+        requestAnimationFrame(renderCursor);
+    }
+    renderCursor();
+
+    // القيمة الأولية
+    updateDisplay();
+    setTimeout(moveUnderline, 500);
 });
