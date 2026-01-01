@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# منع أرشفة صفحة الخطأ 404
+Disallow: /404
+Disallow: /404.html
+
+# رابط خريطة الموقع الرسمي
+Sitemap: https://malekfolio.netlify.app/sitemap.xml
