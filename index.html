@@ -28,19 +28,23 @@
 </head>
 <body>
  
-  <header>
+<header>
     <nav>
-  <ul>
-    <li class="logo"><a href="index.html">MALEK<span>.</span></a></li>
-    <li><a href="#home">Home</a></li>
-    <li><a href="#about">About</a></li>
-    <li><a href="#skills">Skills</a></li>
-    <li><a href="#project">Projects</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <div class="nav-underline"></div>
-  </ul>
-</nav>
-  </header>
+      <ul>
+        <li class="logo"><a href="index.html">MALEK<span>.</span></a></li>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#project">Projects</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li class="theme-switch-wrapper">
+            <button id="theme-toggle" class="theme-toggle-btn">
+                <i class="fas fa-moon"></i> </button>
+        </li>
+        <div class="nav-underline"></div>
+      </ul>
+    </nav>
+</header>
 
   <section id="home">
     <div class="content">
@@ -416,29 +420,6 @@
 <div class="cursor-dot"></div>
 <div class="cursor-outline"></div>
 
-<div id="ai-chat-toggle" class="ai-chat-fab">
-    <i class="fa-solid fa-robot"></i>
-</div>
-
-<div id="ai-chat-window" class="ai-chat-container">
-    <div class="ai-chat-header">
-        <div class="ai-status">
-            <img src="img/logo.png" alt="AI">
-            <div>
-                <h4>Malek AI Assistant</h4>
-                <span>Online | Ready to help</span>
-            </div>
-        </div>
-        <button id="close-chat">&times;</button>
-    </div>
-    <div id="ai-chat-body" class="ai-chat-body">
-        <div class="msg ai">Hello! I'm Malek's AI assistant. How can I help you?</div>
-    </div>
-    <div class="ai-chat-input">
-        <input type="text" id="user-msg" placeholder="Ask me something...">
-        <button id="send-msg"><i class="fa-solid fa-paper-plane"></i></button>
-    </div>
-</div>
 
 <script src="main.js"></script>
 

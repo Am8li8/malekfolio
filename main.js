@@ -235,65 +235,119 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// --- إعدادات الشات بوت ---
-const API_KEY = "AIzaSyBwNEmtUPAMEgzGfLS3a4Z_9hgMJLMcREU";
-const chatToggle = document.getElementById('ai-chat-toggle');
-const chatWindow = document.getElementById('ai-chat-window');
-const closeChat = document.getElementById('close-chat');
-const sendBtn = document.getElementById('send-msg');
-const userInput = document.getElementById('user-msg');
-const chatBody = document.getElementById('ai-chat-body');
+    // --- 8. قائمة الزر الأيمن الماركة (Context Menu) ---
+    const cmHTML = `
+        <div id="custom-cm" class="custom-cm">
+            <div class="cm-item" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i> Back</div>
+            <div class="cm-item" onclick="window.location.reload()"><i class="fa-solid fa-rotate-right"></i> Reload</div>
+            <div class="cm-divider"></div>
+            <div id="cm-copy" class="cm-item"><i class="fa-solid fa-copy"></i> Copy Text</div>
+            <div class="cm-item" id="generate-qr"><i class="fa-solid fa-qrcode"></i> Page QR Code</div>
+            <div class="cm-divider"></div>
+            <div class="cm-item" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Page</div>
+            <div class="cm-item" onclick="window.scrollTo({top: 0, behavior: 'smooth'})"><i class="fa-solid fa-arrow-up"></i> Scroll to Top</div>
+        </div>
+        
+        <div id="qr-modal" class="qr-modal">
+            <h3>Scan QR Code</h3>
+            <div id="qr-container"></div>
+            <p style="font-size:12px; color:#888; margin-top:10px;">Share Malek's Portfolio</p>
+            <button class="view-btn" style="margin-top:15px; width:100%" onclick="document.getElementById('qr-modal').classList.remove('active')">Close</button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', cmHTML);
 
-const SYSTEM_PROMPT = `You are Malek's personal AI Assistant. 
-Bio: Developer (1+ year), Designer (3+ years), 30+ projects. 
-Links: GitHub "Am8li8", WhatsApp +201031660042, CV at "img/cv.pdf".`;
+    const cm = document.getElementById('custom-cm');
+    const copyBtn = document.getElementById('cm-copy');
+    const qrModal = document.getElementById('qr-modal');
 
-// فتح وإغلاق الشات
-if (chatToggle) {
-    chatToggle.addEventListener('click', () => {
-        chatWindow.style.display = (chatWindow.style.display === 'flex') ? 'none' : 'flex';
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        
+        // فحص وجود نص محدد للنسخ
+        const selectedText = window.getSelection().toString();
+        if (selectedText.length > 0) {
+            copyBtn.classList.remove('disabled');
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(selectedText);
+                cm.classList.remove('active');
+            };
+        } else {
+            copyBtn.classList.add('disabled');
+            copyBtn.onclick = null;
+        }
+
+        // تحديد مكان القائمة
+        let x = e.clientX, y = e.clientY;
+        const winW = window.innerWidth, winH = window.innerHeight;
+        const cmW = cm.offsetWidth, cmH = cm.offsetHeight;
+
+        if (x + cmW > winW) x = winW - cmW - 10;
+        if (y + cmH > winH) y = winH - cmH - 10;
+
+        cm.style.left = `${x}px`;
+        cm.style.top = `${y}px`;
+        cm.classList.add('active');
+    });
+
+    // توليد QR Code باستخدام API خارجي سهل
+    document.getElementById('generate-qr').onclick = () => {
+        const pageUrl = window.location.href;
+        const qrContainer = document.getElementById('qr-container');
+        qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${pageUrl}" alt="QR">`;
+        qrModal.classList.add('active');
+        cm.classList.remove('active');
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!qrModal.contains(e.target)) cm.classList.remove('active');
+    });
+
+
+
+    // 1. وظيفة تحديث الرابط (URL) بالثيم الحالي
+function updateThemeURL(theme) {
+    const url = new URL(window.location);
+    url.searchParams.set('theme', theme);
+    window.history.replaceState(null, '', url);
+}
+
+// 2. الكود اللي بيشتغل أول ما الصفحة تفتح
+const savedTheme = localStorage.getItem('theme');
+const urlParams = new URLSearchParams(window.location.search);
+const themeParam = urlParams.get('theme');
+
+// الأولوية للرابط (URL) ثم للتخزين المحلي (LocalStorage)
+const activeTheme = themeParam || savedTheme;
+
+if (activeTheme === 'light') {
+    document.body.classList.add('light-theme');
+    // هنا تأكد إن أيقونة الزرار تتغير لو موجودة
+    const icon = document.querySelector('#theme-toggle i');
+    if(icon) icon.classList.replace('fa-moon', 'fa-sun');
+}
+
+// 3. منطق زرار التبديل
+const themeBtn = document.getElementById('theme-toggle');
+if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('light-theme');
+        const isLight = document.body.classList.contains('light-theme');
+        const currentTheme = isLight ? 'light' : 'dark';
+        
+        // حفظ في الـ LocalStorage
+        localStorage.setItem('theme', currentTheme);
+        
+        // تحديث الرابط فوق
+        updateThemeURL(currentTheme);
+        
+        // تغيير الأيقونة
+        const icon = themeBtn.querySelector('i');
+        if (isLight) {
+            icon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            icon.classList.replace('fa-sun', 'fa-moon');
+        }
     });
 }
-
-if (closeChat) {
-    closeChat.addEventListener('click', () => {
-        chatWindow.style.display = 'none';
-    });
-}
-
-// دالة إرسال الرسائل
-async function handleMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    appendMessage(text, 'user');
-    userInput.value = '';
-    const loadingMsg = appendMessage("Thinking...", 'ai');
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: SYSTEM_PROMPT + "\nUser: " + text }] }]
-            })
-        });
-        const data = await response.json();
-        loadingMsg.innerText = data.candidates[0].content.parts[0].text;
-    } catch (error) {
-        loadingMsg.innerText = "Connection error. Try again!";
-    }
-}
-
-function appendMessage(text, side) {
-    const div = document.createElement('div');
-    div.className = `msg ${side}`;
-    div.innerText = text;
-    chatBody.appendChild(div);
-    chatBody.scrollTop = chatBody.scrollHeight;
-    return div;
-}
-
-sendBtn.onclick = handleMessage;
-userInput.onkeypress = (e) => { if (e.key === 'Enter') handleMessage(); };
 });
