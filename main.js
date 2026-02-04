@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (loadMoreBtn) {
+            // تحديث عرض حاوية زر "Load More" بناءً على النتائج
             loadMoreBtn.parentElement.style.display = currentIndex >= filteredCards.length ? 'none' : 'block';
         }
     }
@@ -78,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 4. نظام مراقبة السكاشن وتحريك المهارات (المصحح) ---
+    // --- 4. نظام مراقبة السكاشن وتحريك المهارات ---
     const sections = document.querySelectorAll('section, #home');
     const observerOptions = {
         root: null,
@@ -86,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         threshold: 0
     };
 
-    // متغير لمنع تكرار أنميشن المهارات واختفائه
     let skillsAnimated = false;
 
     const observer = new IntersectionObserver((entries) => {
@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entry.isIntersecting) {
                 const id = entry.target.getAttribute('id');
                 
-                // تحديث الروابط النشطة
                 navLinks.forEach(link => {
                     link.classList.remove('active');
                     if (link.getAttribute('href') === `#${id}`) {
@@ -103,62 +102,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // --- تحريك المهارات مرة واحدة فقط ---
                 if (id === 'skills' && !skillsAnimated) {
                     const bars = document.querySelectorAll('.progress-line span');
                     bars.forEach(bar => {
                         const targetWidth = bar.getAttribute('data-skill'); 
-                        // تم حذف السطر اللي بيصفر العرض عشان ما يختفيش ويرجع
                         bar.style.width = targetWidth + '%';
                     });
-                    skillsAnimated = true; // تم التنفيذ بنجاح
+                    skillsAnimated = true; 
                 }
             }
         });
     }, observerOptions);
 
     sections.forEach(section => observer.observe(section));
-
     window.addEventListener('resize', moveUnderline);
 
-    // التشغيل الأولي
-    updateDisplay();
-    setTimeout(moveUnderline, 200);
-
-
+    // --- 5. الكرسر المطور (Custom Smooth Cursor) ---
     const ring = document.createElement('div');
     ring.className = 'cursor-ring';
     document.body.appendChild(ring);
 
-    let mX = 0, mY = 0; // موقع الماوس
-    let cX = 0, cY = 0; // موقع الدائرة
+    let mX = 0, mY = 0; 
+    let cX = 0, cY = 0; 
 
     window.addEventListener('mousemove', e => {
         mX = e.clientX;
         mY = e.clientY;
     });
 
-    // حلقة الأنيميشن: أداء 120 إطار في الثانية
     function render() {
-        // تنعيم الحركة (كلما قل الرقم 0.1 زادت "السيولة")
         cX += (mX - cX) * 0.3;
         cY += (mY - cY) * 0.3;
-
         ring.style.transform = `translate(${cX - 20}px, ${cY - 20}px)`;
-        
         requestAnimationFrame(render);
     }
     render();
 
-    // التفاعل مع العناصر
-    const targets = document.querySelectorAll('a, button, .project-card, .icons a');
-    targets.forEach(t => {
+    const interactiveTargets = document.querySelectorAll('a, button, .project-card, .icons a');
+    interactiveTargets.forEach(t => {
         t.addEventListener('mouseenter', () => ring.classList.add('cursor-active'));
         t.addEventListener('mouseleave', () => ring.classList.remove('cursor-active'));
     });
 
-
-
+    // --- 6. مودال المشاريع (Modal System) ---
     const modalHTML = `
         <div id="project-modal" class="modal-wrapper">
             <div class="modal-bg"></div>
@@ -181,28 +167,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('project-modal');
     const closeBtn = modal.querySelector('.close-btn');
 
-    // 2. إضافة زر الرابط الخارجي بجانب زر Details في كل كارت تلقائياً
+    // إنشاء أزرار الكروت تلقائياً
     document.querySelectorAll('.project-card').forEach(card => {
-        const infoDiv = card.querySelector('.project-info');
         const viewBtn = card.querySelector('.open-modal');
-        const linkHref = card.querySelector('.project-link').href;
-
-        // وضع الأزرار في حاوية واحدة
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'card-btns';
+        const hiddenLink = card.querySelector('.project-link');
         
-        const linkBtn = document.createElement('a');
-        linkBtn.href = linkHref;
-        linkBtn.target = '_blank';
-        linkBtn.className = 'icon-link';
-        linkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
+        if (viewBtn && hiddenLink) {
+            const linkHref = hiddenLink.href;
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'card-btns';
+            
+            const linkBtn = document.createElement('a');
+            linkBtn.href = linkHref;
+            linkBtn.target = '_blank';
+            linkBtn.className = 'icon-link';
+            linkBtn.innerHTML = '<i class="fa-solid fa-link"></i>';
 
-        viewBtn.parentNode.insertBefore(btnContainer, viewBtn);
-        btnContainer.appendChild(viewBtn);
-        btnContainer.appendChild(linkBtn);
+            viewBtn.parentNode.insertBefore(btnContainer, viewBtn);
+            btnContainer.appendChild(viewBtn);
+            btnContainer.appendChild(linkBtn);
+        }
     });
 
-    // 3. منطق فتح المودال
+    // فتح المودال
     document.querySelectorAll('.open-modal').forEach(btn => {
         btn.addEventListener('click', function() {
             const card = this.closest('.project-card');
@@ -220,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 4. وظائف الإغلاق (X, Overlay, Esc)
     const hideModal = () => {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
@@ -228,14 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeBtn.onclick = hideModal;
     modal.querySelector('.modal-bg').onclick = hideModal;
-
     document.addEventListener('keydown', (e) => {
         if (e.key === "Escape" && modal.style.display === 'flex') hideModal();
     });
 
-
-
-    // --- 8. قائمة الزر الأيمن الماركة (Context Menu) ---
+    // --- 7. قائمة الزر الأيمن المخصصة (Context Menu) ---
     const cmHTML = `
         <div id="custom-cm" class="custom-cm">
             <div class="cm-item" onclick="window.history.back()"><i class="fa-solid fa-arrow-left"></i> Back</div>
@@ -251,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="qr-modal" class="qr-modal">
             <h3>Scan QR Code</h3>
             <div id="qr-container"></div>
-            <p style="font-size:12px; color:#888; margin-top:10px;">Share Malek's Portfolio</p>
+            <p style="font-size:12px; color:#888; margin-top:10px;">Share Portfolio</p>
             <button class="view-btn" style="margin-top:15px; width:100%" onclick="document.getElementById('qr-modal').classList.remove('active')">Close</button>
         </div>
     `;
@@ -263,8 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        
-        // فحص وجود نص محدد للنسخ
         const selectedText = window.getSelection().toString();
         if (selectedText.length > 0) {
             copyBtn.classList.remove('disabled');
@@ -277,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
             copyBtn.onclick = null;
         }
 
-        // تحديد مكان القائمة
         let x = e.clientX, y = e.clientY;
         const winW = window.innerWidth, winH = window.innerHeight;
         const cmW = cm.offsetWidth, cmH = cm.offsetHeight;
@@ -290,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cm.classList.add('active');
     });
 
-    // توليد QR Code باستخدام API خارجي سهل
     document.getElementById('generate-qr').onclick = () => {
         const pageUrl = window.location.href;
         const qrContainer = document.getElementById('qr-container');
@@ -303,51 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!qrModal.contains(e.target)) cm.classList.remove('active');
     });
 
-
-
-    // 1. وظيفة تحديث الرابط (URL) بالثيم الحالي
-function updateThemeURL(theme) {
-    const url = new URL(window.location);
-    url.searchParams.set('theme', theme);
-    window.history.replaceState(null, '', url);
-}
-
-// 2. الكود اللي بيشتغل أول ما الصفحة تفتح
-const savedTheme = localStorage.getItem('theme');
-const urlParams = new URLSearchParams(window.location.search);
-const themeParam = urlParams.get('theme');
-
-// الأولوية للرابط (URL) ثم للتخزين المحلي (LocalStorage)
-const activeTheme = themeParam || savedTheme;
-
-if (activeTheme === 'light') {
-    document.body.classList.add('light-theme');
-    // هنا تأكد إن أيقونة الزرار تتغير لو موجودة
-    const icon = document.querySelector('#theme-toggle i');
-    if(icon) icon.classList.replace('fa-moon', 'fa-sun');
-}
-
-// 3. منطق زرار التبديل
-const themeBtn = document.getElementById('theme-toggle');
-if (themeBtn) {
-    themeBtn.addEventListener('click', () => {
-        document.body.classList.toggle('light-theme');
-        const isLight = document.body.classList.contains('light-theme');
-        const currentTheme = isLight ? 'light' : 'dark';
-        
-        // حفظ في الـ LocalStorage
-        localStorage.setItem('theme', currentTheme);
-        
-        // تحديث الرابط فوق
-        updateThemeURL(currentTheme);
-        
-        // تغيير الأيقونة
-        const icon = themeBtn.querySelector('i');
-        if (isLight) {
-            icon.classList.replace('fa-moon', 'fa-sun');
-        } else {
-            icon.classList.replace('fa-sun', 'fa-moon');
-        }
-    });
-}
+    // --- الإطلاق الأولي ---
+    updateDisplay();
+    setTimeout(moveUnderline, 200);
 });
